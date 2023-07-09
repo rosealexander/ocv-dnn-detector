@@ -99,19 +99,16 @@ Example Response
 
 ## Model Zoo
 
-The following models have been tested to work with this Object Detection API:
+The following models have been tested to work:
 
 | Model                                                        | Weights File                                                                                                                                       | Config File                                                                                                                                                          |
 |--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [Faster-RCNN Inception v2](docs/Faster-RCNN-Inception-v2.md) | [Download](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)                                 | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/faster_rcnn_inception_v2_coco_2018_01_28.pbtxt)                                               |
 | [Mask-RCNN Inception v2](docs/Mask-RCNN-Inception-v2.md)     | [Download](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)                                   | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt)                                                 |
 | [MobileNet-SSD v3](docs/MobileNet-SSD-v3.md)                 | [Download](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v3_large_coco_2020_01_14.tar.gz)                                   | [Download](https://gist.github.com/dkurt/54a8e8b51beb3bd3f770b79e56927bd7/raw/2a20064a9d33b893dd95d2567da126d0ecd03e85/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt) |
-| [ssd300](docs/ssd300.md)                                     | [Download](https://storage.openvinotoolkit.org/repositories/open_model_zoo/public/2021.4/ssd300/models_VGGNet_VOC0712Plus_SSD_300x300_ft.tar.gz)   | -                                                                                                                                                                    |
-| [yolov3](docs/yolov3.md)                                     | [Download](https://pjreddie.com/media/files/yolov3.weights)                                                                                        | [Download](https://github.com/pjreddie/darknet/raw/master/cfg/yolov3.cfg)                                                                                            |
-| [yolov4](docs/yolov4.md)                                     | [Download](https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov4.weights)                                                            | [Download](https://github.com/AlexeyAB/darknet/raw/master/cfg/yolov4.cfg)                                                                                            |
-| [yolov7](docs/yolov7.md)                                     | [Download](https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov7.weights)                                                            | [Download](https://github.com/AlexeyAB/darknet/raw/master/cfg/yolov7.cfg)                                                                                            |
+| [YOLOv4](docs/yolov4.md)                                     | [Download](https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov4.weights)                                                            | [Download](https://github.com/AlexeyAB/darknet/raw/master/cfg/yolov4.cfg)                                                                                            |
 
-Please note that these models are provided as examples, and additional models may be integrated.
+* Please note that these are provided as examples and additional models may be integrated.
 
 ## Deployment
 

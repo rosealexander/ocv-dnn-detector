@@ -9,3 +9,4 @@ _*
 !requirements.txt
 !/src/
 !/tests/
+!/docs/

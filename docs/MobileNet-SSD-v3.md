@@ -18,3 +18,13 @@ The pretrained weights for MobileNet-SSD v3 can be downloaded from the following
 ## License
 
 The model is released under the [Apache 2.0 License](https://github.com/tensorflow/models/blob/master/LICENSE).
+
+## Citation
+```text
+@inproceedings{liu2016ssd,
+  title = {{SSD}: Single Shot MultiBox Detector},
+  author = {Liu, Wei and Anguelov, Dragomir and Erhan, Dumitru and Szegedy, Christian and Reed, Scott and Fu, Cheng-Yang and Berg, Alexander C.},
+  booktitle = {ECCV},
+  year = {2016}
+}
+```

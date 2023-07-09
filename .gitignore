@@ -1,0 +1,11 @@
+/*
+.*
+_*
+# Include the following files and directories
+!/.gitignore
+!/LICENSE
+!/pyproject.toml
+!/README.md
+!requirements.txt
+!/src/
+!/tests/

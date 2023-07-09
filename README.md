@@ -11,20 +11,14 @@ The Flask application provides two routes:
 
 ## Getting Started
 
-To get started with the application, follow these steps:
+### Prerequisites
+Before running the application, make sure you have the following prerequisites:
 
-### 1. Clone the repository:
-```shell
-git clone https://github.com/rosealexander/object-detection-dnn
-```
+- Python >= **3.9**
 
-### 2. Install the dependencies:
+- Required dependencies [see requirements.txt](requirements.txt)
 
-```shell
-pip install -r requirements.txt
-```
-
-### 3. Set the environment variables:
+### Set environment variables:
 
   - **MODEL**: Path to the model file (optional).
   - **CONFIG**: Path to the configuration file (optional).
@@ -33,13 +27,21 @@ pip install -r requirements.txt
   - **FORWARD**: Flag indicating whether to perform a forward pass and return the computation time and response (default: False).
   - **CONFIDENCE_THRESHOLD**: Confidence threshold for object detection (default: 0.1).
   - **NMS_THRESHOLD**: Non-Maximum Suppression (NMS) threshold for object detection (default: 0.5).
+  - **MODEL_SERVER_WORKERS**: Number of workers (default: the number of CPU cores).
+  - **MODEL_SERVER_TIMEOUT**: Server timout in seconds (default: 60).
 
 Note: If the **MODEL** or **CONFIG** are not defined, their values will be automatically determined based on predefined file extension patterns and files available in the current directory and its subdirectories.
 
-### 4. Start the Development Flask application:
+### Start the Development server:
 
 ```shell
-flask --app src/wsgi.py run
+bin/start-dev
+```
+
+### Start the Production server:
+
+```shell
+bin/start
 ```
 
 ## API Routes

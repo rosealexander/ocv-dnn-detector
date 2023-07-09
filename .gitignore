@@ -6,7 +6,8 @@ _*
 !/LICENSE
 !/pyproject.toml
 !/README.md
-!requirements.txt
+!/requirements.txt
+!/version.py
 !/src/
 !/tests/
 !/docs/

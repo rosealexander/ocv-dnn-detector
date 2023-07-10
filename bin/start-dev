@@ -1,2 +1,4 @@
 #!/bin/bash
-flask --app src/wsgi.py run
+script_dir=$(realpath "$(dirname "${0}")")
+root_dir=$(dirname "${script_dir}")
+flask --app "$root_dir/src/wsgi.py" run

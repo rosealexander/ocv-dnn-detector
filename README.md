@@ -1,6 +1,6 @@
 # OpenCV Deep Neural Network Detector
 
-This is a Flask application for performing object detection using models in formats such as caffemodel, pb, t7, net, weights, bin, and onnx, leveraging the capabilities of OpenCV DNN module for efficient and accurate detection.
+This is a Flask application, suitable for use with [AWS SageMaker hosting services](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html), for performing object detection using models in formats such as caffemodel, pb, t7, net, weights, bin, and onnx, leveraging the capabilities of OpenCV DNN module for efficient and accurate detection.
 
 ## Overview
 
@@ -36,12 +36,6 @@ Note: If the **MODEL** or **CONFIG** are not defined, their values will be autom
 
 ```shell
 bin/start-dev
-```
-
-### Start the Production server:
-
-```shell
-bin/start
 ```
 
 ## API Routes

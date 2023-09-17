@@ -104,20 +104,22 @@ CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', 0.5))
 NMS_THRESHOLD = float(os.getenv('NMS_THRESHOLD', 0.5))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
 SCALE_FACTOR = os.getenv('SCALE_FACTOR', 1.0)
+DEBUG = os.getenv('DEBUG', False)
 
 # Configure logging
-if LOG_LEVEL == 'DEBUG':
-    logging.basicConfig(level=logging.DEBUG)
-elif LOG_LEVEL == 'INFO':
-    logging.basicConfig(level=logging.INFO)
-elif LOG_LEVEL == 'ERROR':
-    logging.basicConfig(level=logging.ERROR)
-elif LOG_LEVEL == 'CRITICAL':
-    logging.basicConfig(level=logging.CRITICAL)
-else:
-    logging.basicConfig(level=logging.WARNING)
-
 logger = logging.getLogger(__name__)
+
+if LOG_LEVEL == 'DEBUG' or DEBUG:
+    LOG_LEVEL = 'DEBUG'
+    logger.setLevel(level=logging.DEBUG)
+elif LOG_LEVEL == 'INFO':
+    logger.setLevel(level=logging.INFO)
+elif LOG_LEVEL == 'ERROR':
+    logger.setLevel(level=logging.ERROR)
+elif LOG_LEVEL == 'CRITICAL':
+    logger.setLevel(level=logging.CRITICAL)
+else:
+    logger.setLevel(level=logging.WARNING)
 
 # Configure MODEL and CONFIG
 if MODEL is None or CONFIG is None:
@@ -314,6 +316,7 @@ def draw(img: np.ndarray, labeled_data: list[dict]) -> np.ndarray:
 
 
 app = flask.Flask(__name__)
+app.logger.setLevel(logger.level)
 
 
 @app.route('/ping', methods=['GET'])

@@ -26,6 +26,7 @@
 # ---------                --------------------              -------------
 # number of workers        MODEL_SERVER_WORKERS              the number of CPU cores
 # timeout                  MODEL_SERVER_TIMEOUT              60 seconds
+# log_level                LOG_LEVEL                         WARNING
 
 from __future__ import print_function
 
@@ -34,6 +35,22 @@ import os
 import signal
 import subprocess
 import sys
+import logging
+
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
+
+if LOG_LEVEL == 'DEBUG':
+    logging.basicConfig(level=logging.DEBUG)
+elif LOG_LEVEL == 'INFO':
+    logging.basicConfig(level=logging.INFO)
+elif LOG_LEVEL == 'ERROR':
+    logging.basicConfig(level=logging.ERROR)
+elif LOG_LEVEL == 'CRITICAL':
+    logging.basicConfig(level=logging.CRITICAL)
+else:
+    logging.basicConfig(level=logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 cpu_count = multiprocessing.cpu_count()
 
@@ -55,7 +72,7 @@ def sigterm_handler(nginx_pid, gunicorn_pid):
 
 
 def start_server():
-    print('Starting the inference server with {} workers.'.format(model_server_workers))
+    logger.info('Starting the inference server with {} workers.'.format(model_server_workers))
 
     # link the log streams to stdout/err, so they will be logged to the container logs
     subprocess.check_call(['ln', '-sf', '/dev/stdout', '/var/log/nginx/access.log'])
@@ -79,7 +96,7 @@ def start_server():
             break
 
     sigterm_handler(nginx.pid, gunicorn.pid)
-    print('Inference server exiting')
+    logger.info('Inference server exiting')
 
 
 # The main routine just invokes the start function.

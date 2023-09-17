@@ -15,10 +15,6 @@
 # limitations under the License.
 #
 # This is a simple wrapper for the Gunicorn server to locate your Flask application.
-import os
-import sys
-import logging
-
 import detector as myapp
 
 # If you need to change the algorithm file, modify the "myapp" value in the code above.

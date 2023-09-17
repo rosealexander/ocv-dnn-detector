@@ -66,17 +66,19 @@ from typing import Any, Sequence
 import cv2 as cv
 import flask
 import io
-from PIL import Image
+from PIL import Image, ImageFile
 import numpy as np
-
-app = flask.Flask(__name__)
 
 # Add the root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from version import __version__
-
 VERSION = __version__
+
+app = flask.Flask(__name__)
+
+# Fix for 499 status code errors
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 with warnings.catch_warnings():
     # Ignore deprecation and future warnings

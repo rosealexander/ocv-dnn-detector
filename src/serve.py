@@ -26,34 +26,41 @@
 # ---------                --------------------              -------------
 # number of workers        MODEL_SERVER_WORKERS              the number of CPU cores
 # timeout                  MODEL_SERVER_TIMEOUT              60 seconds
-# log_level                LOG_LEVEL                         WARNING
+# log level                LOG_LEVEL                         WARNING
+# debug mode               DEBUG                             None
 
 from __future__ import print_function
 
 import multiprocessing
 import os
+import time
 import signal
 import subprocess
 import sys
 import logging
+import psutil
 
+
+# Configure logging
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
-
-if LOG_LEVEL == 'DEBUG':
-    logging.basicConfig(level=logging.DEBUG)
-elif LOG_LEVEL == 'INFO':
-    logging.basicConfig(level=logging.INFO)
-elif LOG_LEVEL == 'ERROR':
-    logging.basicConfig(level=logging.ERROR)
-elif LOG_LEVEL == 'CRITICAL':
-    logging.basicConfig(level=logging.CRITICAL)
-else:
-    logging.basicConfig(level=logging.WARNING)
+DEBUG = os.getenv('DEBUG', False)
 
 logger = logging.getLogger(__name__)
 
-cpu_count = multiprocessing.cpu_count()
+if LOG_LEVEL == 'DEBUG' or DEBUG:
+    LOG_LEVEL = 'DEBUG'
+    logger.setLevel(level=logging.DEBUG)
+elif LOG_LEVEL == 'INFO':
+    logger.setLevel(level=logging.INFO)
+elif LOG_LEVEL == 'ERROR':
+    logger.setLevel(level=logging.ERROR)
+elif LOG_LEVEL == 'CRITICAL':
+    logger.setLevel(level=logging.CRITICAL)
+else:
+    logger.setLevel(level=logging.WARNING)
 
+# set server configs
+cpu_count = multiprocessing.cpu_count()
 model_server_timeout = os.environ.get('MODEL_SERVER_TIMEOUT', 60)
 model_server_workers = int(os.environ.get('MODEL_SERVER_WORKERS', cpu_count))
 
@@ -69,6 +76,20 @@ def sigterm_handler(nginx_pid, gunicorn_pid):
         pass
 
     sys.exit(0)
+
+
+def log_server_information():
+    memory_info = psutil.virtual_memory()
+    swap_memory_info = psutil.swap_memory()
+    cpu_percent = psutil.cpu_percent(interval=1)
+    load_average = os.getloadavg()
+
+    t = time.time()
+
+    logger.debug(f"{t}: Memory Usage: {memory_info.used / (1024 ** 3):.2f} GB used / {memory_info.total / (1024 ** 3):.2f} GB total ({memory_info.percent:.2f}% used)")
+    logger.debug(f"{t}: Swap Memory Usage: {swap_memory_info.used / (1024 ** 3):.2f} GB used / {swap_memory_info.total / (1024 ** 3):.2f} GB total")
+    logger.debug(f"{t}: CPU Usage: {cpu_percent}%")
+    logger.debug(f"{t}: Load Average: {load_average}")
 
 
 def start_server():
@@ -91,6 +112,8 @@ def start_server():
     # If either subprocess exits, so do we.
     pids = set([nginx.pid, gunicorn.pid])
     while True:
+        if DEBUG:
+            log_server_information()
         pid, _ = os.wait()
         if pid in pids:
             break

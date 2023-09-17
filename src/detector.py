@@ -69,6 +69,8 @@ import io
 from PIL import Image
 import numpy as np
 
+app = flask.Flask(__name__)
+
 # Add the root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -108,6 +110,12 @@ DEBUG = os.getenv('DEBUG', False)
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+log_handler = logging.StreamHandler()
+log_timestamp_format = "%Y-%m-%d %H:%M:%S %z"
+log_formatter = logging.Formatter(fmt='[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s', datefmt=log_timestamp_format)
+log_formatter = log_handler.setFormatter(log_formatter)
+logger.addHandler(log_handler)
 
 if LOG_LEVEL == 'DEBUG' or DEBUG:
     LOG_LEVEL = 'DEBUG'
@@ -268,10 +276,9 @@ def infer(data: bytes, model_path: str, config_path: str, names_path: str = None
     {'detection_latency': 0.5623, 'start_time': 1632833372.123456, 'end_time': 1632833372.987654, 'results': [{'id': 'person', 'confidence': 0.85}, {'id': 'car', 'confidence': 0.92}]}
     >>> result = infer(img_data, model, config, forward=True)
     {'detection_latency': 0.3412, 'start_time': 1632833372.123456, 'end_time': 1632833372.987654, 'results': <forward_result>}
-
-
     """
-    img = cv.cvtColor(np.array(Image.open(io.BytesIO(data))), cv.COLOR_BGR2RGB)
+    with Image.open(io.BytesIO(data)) as pil_img:
+        img = cv.cvtColor(np.array(pil_img), cv.COLOR_BGR2RGB)
 
     if kwargs.get('forward', False):
         t0 = time.time()
@@ -313,10 +320,6 @@ def draw(img: np.ndarray, labeled_data: list[dict]) -> np.ndarray:
         point = (lab.get('left'), lab.get('top') - 10)
         cv.putText(img, str(lab.get('id')), point, cv.FONT_HERSHEY_SIMPLEX, 0.7, (36, 255, 12), 2)
     return img
-
-
-app = flask.Flask(__name__)
-app.logger.setLevel(logger.level)
 
 
 @app.route('/ping', methods=['GET'])

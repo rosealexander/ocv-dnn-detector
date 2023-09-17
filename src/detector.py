@@ -100,7 +100,6 @@ FORWARD_PASS = os.getenv('FORWARD_PASS', '').lower() == 'true'
 GPU_SUPPORT = os.getenv('GPU_SUPPORT', '').lower() == 'true'
 SILENT_RUN = os.getenv('SILENT_RUN', '').lower() == 'true'
 
-print(os.getenv('SILENT_RUN'), SILENT_RUN)
 CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', 0.5))
 NMS_THRESHOLD = float(os.getenv('NMS_THRESHOLD', 0.5))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()

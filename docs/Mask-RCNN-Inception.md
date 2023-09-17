@@ -1,4 +1,4 @@
-# Mask-RCNN Inception v2
+# Mask-RCNN Inception
 
 ## Pretrained Weights
 

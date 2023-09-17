@@ -1,14 +1,14 @@
-# Faster-RCNN Inception v2
+# Faster-RCNN Inception
 
 ## Pretrained Weights
 
 Pre-trained on the [COCO dataset](https://cocodataset.org).
 
-- [Download Faster-RCNN Inception v2 Weights](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)
+- [Download Faster-RCNN Inception Weights](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)
 
 ## Configuration File
 
-- [Download Faster-RCNN Inception v2 Config File](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/faster_rcnn_inception_v2_coco_2018_01_28.pbtxt)
+- [Download Faster-RCNN Inception Config File](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/faster_rcnn_inception_v2_coco_2018_01_28.pbtxt)
 
 ## References
 

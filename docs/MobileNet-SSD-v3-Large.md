@@ -1,14 +1,14 @@
-# MobileNet-SSD v3
+# MobileNet-SSD v3 Large
 
 ## Pretrained Weights
 
-The pretrained weights for MobileNet-SSD v3 can be downloaded from the following link:
+The pretrained weights for MobileNet-SSD v3 Large can be downloaded from the following link:
 
-- [Download MobileNet-SSD v3 Weights](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v3_large_coco_2020_01_14.tar.gz)
+- [Download MobileNet-SSD v3 Large Weights](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v3_large_coco_2020_01_14.tar.gz)
 
 ## Configuration File
 
-- [Download MobileNet-SSD v3 Config File](https://gist.github.com/dkurt/54a8e8b51beb3bd3f770b79e56927bd7/raw/2a20064a9d33b893dd95d2567da126d0ecd03e85/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt)
+- [Download MobileNet-SSD v3 Large Config File](https://gist.github.com/dkurt/54a8e8b51beb3bd3f770b79e56927bd7/raw/2a20064a9d33b893dd95d2567da126d0ecd03e85/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt)
 
 ## References
 

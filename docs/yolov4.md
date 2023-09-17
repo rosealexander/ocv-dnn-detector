@@ -12,7 +12,7 @@ Pre-trained on the [MS COCO dataset](https://cocodataset.org).
 
 ## References
 
-- [YOLOv7 Paper](https://arxiv.org/abs/2207.02696)
+- [YOLOv4 Paper](https://arxiv.org/abs/2004.10934)
 - [Release - Darknet](https://github.com/AlexeyAB/darknet/releases/tag/yolov4)
 
 ## License

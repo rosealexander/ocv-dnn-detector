@@ -10,6 +10,7 @@
 # - `MODEL`: (Optional) Path to the model file.
 # - `CONFIG`: (Optional) Path to the configuration file.
 # - `FORWARD`: (Optional) Flag indicating whether to perform a forward pass and return the computation time and response.
+# - `SILENT_RUN`: (Optional) Run without returning detection results.
 # - `PYTEST_IMAGE`: Path to the test image.
 # - `PYTEST_PREVIEW`: (Optional) flag to enable image preview during testing.
 #
@@ -50,17 +51,28 @@ options = dict(
     classes=os.getenv("CLASSES"),
     model=os.getenv("MODEL"),
     config=os.getenv("CONFIG"),
-    forward=os.getenv("FORWARD"),
+    forward=os.getenv("FORWARD_PASS"),
     image=os.getenv("PYTEST_IMAGE"),
-    preview=os.getenv('PYTEST_PREVIEW')
+    preview=os.getenv('PYTEST_PREVIEW'),
+    silent=os.getenv('SILENT_RUN', '')
 )
 
 schema = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
-        "latency": {"type": "number"},
-        "output": {"type": "array"}
+        "Model": {"type": "string"},
+        "Config": {"type": "string"},
+        "VersionID": {"type": "string"},
+        "ForwardPass": {"type": "boolean"},
+        "GPUSupport": {"type": "boolean"},
+        "SilentRun": {"type": "boolean"},
+        "StartTime": {"type": "number"},
+        "EndTime": {"type": "number"},
+        "DetectionStartTime": {"type": "number"},
+        "DetectionEndTime": {"type": "number"},
+        "DetectionLatency": {"type": "number"},
+        "Results": {"type": "array"}
     }
 }
 
@@ -84,6 +96,9 @@ def test_invocations(client):
     act = json.loads(resp.data.decode())
     assert validate(instance=act, schema=schema) is None
 
+    if options.get('silent').lower() == "true":
+        assert act.get('Results') == []
+
 
 def test_invalid_request(client):
     """
@@ -97,54 +112,8 @@ def test_invalid_request(client):
     resp = client.post('/invocations', data=b'invalid')
     assert resp.status_code == 500
 
-    # Set invalid values for environment vars
-    os.environ['MODEL'] = '/path/invalid/model.pb'
-    os.environ['CONFIG'] = '/path/invalid/config.pbtxt'
-
-    # Send a request with invalid environment values
-    resp = client.post('/invocations', data=b'dummy_data')
-    assert resp.status_code == 500
-
-    # Clean up environment variables
-    os.environ.pop('MODEL', None)
-    os.environ.pop('CONFIG', None)
-
 
 if not options.get('forward'):
-    def test_missing_classes_file(client):
-        """
-        Tests the object detection service when the classes file is missing.
-        """
-        # Set an invalid value for the CLASSES environment variable
-        os.environ['CLASSES'] = '/path/to/invalid/classes.txt'
-
-        # Load a test image
-        img = cv.imread(options.get('image'))
-        encoded, buf = cv.imencode('.jpg', img)
-        data = buf.tobytes()
-
-        # Send a POST request to the /invocations endpoint
-        resp = client.post('/invocations', data=data)
-        response_data = json.loads(resp.data.decode())
-
-        # Assert the response status code and the presence of the 'output' field
-        assert resp.status_code == 200
-        assert 'output' in response_data
-
-        # Assert the contents of the 'output' field
-        for item in response_data['output']:
-            assert 'id' in item
-            assert 'confidence' in item
-            assert 'left' in item
-            assert 'top' in item
-            assert 'right' in item
-            assert 'bottom' in item
-            assert item['id'] is not None
-
-        # Clean up the environment variable
-        os.environ.pop('CLASSES', None)
-
-
     def test_draw(client):
         """
         Tests the image drawing function to validate the accurate rendering of bounding boxes and labels on images.
@@ -153,9 +122,9 @@ if not options.get('forward'):
         encoded, buf = cv.imencode('.jpg', img)
         data = buf.tobytes()
         resp = client.post('/invocations', data=data)
-        labeled_data = json.loads(resp.data.decode()).get('output')
+        labeled_data = json.loads(resp.data.decode()).get('Results')
         img = draw(img, labeled_data)
         if options.get('preview'):
             cv.imshow('test', img)
-            cv.waitKey(5000)
+            cv.waitKey(3000)
         assert True

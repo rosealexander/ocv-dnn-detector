@@ -33,12 +33,20 @@
 #
 # Note:
 # -----
-# The module requires the following environment variables to be defined:
+# The module allows the following environment variables:
 #
-# MODEL: Path to the model file.
-# CONFIG: Path to the configuration file.
+# MODEL: (Optional) Path to the model file.
+# CONFIG: (Optional) Path to the configuration file.
 # CLASSES: (Optional) Path to the classes file.
-# FORWARD: (Optional) Flag indicating whether to perform a forward pass and return the computation time and response.
+# FORWARD: (default: False) Boolean indicating whether to return results from cv.dnn.Net.forward rather than cv.dnn.DetectionModel.detect.
+# GPU_SUPPORT: (default: False) Boolean indicating whether GPU support is enabled.
+# SILENT_RUN: (default: False) Boolean to run detector without returning object detection results.
+# CONFIDENCE_THRESHOLD (default: 0.5) Confidence threshold for object detection.
+# NMS_THRESHOLD: (default: 0.5) Non-Maximum Suppression (NMS) threshold for object detection.
+# IMAGE_SCALE_FACTOR: (optional) The input scalefactor value to match neural network model requirements, value is inferred if none provided.
+# MODEL_SERVER_WORKERS: (default: auto) Number of workers, defaults to number of cpu cores.
+# MODEL_SERVER_TIMEOUT: (default: 60) Server timout in seconds.
+# LOG_LEVEL: (default: WARNING) The application logging level.
 #
 # If MODEL or CONFIG is not defined, the module automatically determines their values based on predefined file extension
 # patterns and the files available in the current directory and its subdirectories.
@@ -48,7 +56,9 @@ import glob
 import json
 import logging
 import os
+import sys
 import re
+import time
 import timeit
 import warnings
 from typing import Any, Sequence
@@ -59,6 +69,12 @@ import io
 from PIL import Image
 import numpy as np
 
+# Add the root directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from version import __version__
+
+VERSION = __version__
 
 with warnings.catch_warnings():
     # Ignore deprecation and future warnings
@@ -76,20 +92,35 @@ def inner(_it, _timer{init}):
     return _t1 - _t0, retval
 """
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # Read environment variables
 MODEL = os.getenv('MODEL', None)
 CONFIG = os.getenv('CONFIG', None)
 CLASSES = os.getenv('CLASSES', None)
-FORWARD = os.getenv('FORWARD', False)
-GPU_SUPPORT = os.getenv('GPU_SUPPORT', False)
-CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', 0.2))
-NMS_THRESHOLD = float(os.getenv('NMS_THRESHOLD', 0.4))
+FORWARD_PASS = os.getenv('FORWARD_PASS', '').lower() == 'true'
+GPU_SUPPORT = os.getenv('GPU_SUPPORT', '').lower() == 'true'
+SILENT_RUN = os.getenv('SILENT_RUN', '').lower() == 'true'
 
+print(os.getenv('SILENT_RUN'), SILENT_RUN)
+CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', 0.5))
+NMS_THRESHOLD = float(os.getenv('NMS_THRESHOLD', 0.5))
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
+SCALE_FACTOR = os.getenv('SCALE_FACTOR', 1.0)
 
+# Configure logging
+if LOG_LEVEL == 'DEBUG':
+    logging.basicConfig(level=logging.DEBUG)
+elif LOG_LEVEL == 'INFO':
+    logging.basicConfig(level=logging.INFO)
+elif LOG_LEVEL == 'ERROR':
+    logging.basicConfig(level=logging.ERROR)
+elif LOG_LEVEL == 'CRITICAL':
+    logging.basicConfig(level=logging.CRITICAL)
+else:
+    logging.basicConfig(level=logging.WARNING)
+
+logger = logging.getLogger(__name__)
+
+# Configure MODEL and CONFIG
 if MODEL is None or CONFIG is None:
     """
     Check if MODEL and CONFIG are already defined. If not, perform the following steps:
@@ -104,7 +135,7 @@ if MODEL is None or CONFIG is None:
 
     model_pattern = r"\.(caffemodel|pb|t7|net|weights|bin|onnx)$"
     config_pattern = r"\.(prototxt|pbtxt|cfg|xml)$"
-    files = [file for file in glob.glob('**/*', recursive=True)]
+    files = [file for file in glob.glob('**/*', recursive=True) if not file.startswith(('.', 'bin/', 'docs/', 'src/', 'tests/', 'venv/'))]
     config_files = [file for file in files if re.search(config_pattern, file)]
     model_files = [file for file in files if re.search(model_pattern, file)]
 
@@ -119,6 +150,8 @@ if MODEL is None or CONFIG is None:
         CONFIG = CONFIG or next((c for c in config_files if c.endswith('.pbtxt')), None)
     elif MODEL.endswith('.weights'):
         CONFIG = CONFIG or next((c for c in config_files if c.endswith('.cfg')), None)
+        if "yolo" in MODEL.lower():
+            SCALE_FACTOR = os.getenv('SCALE_FACTOR', (1.0 / 255))
     elif MODEL.endswith('.bin'):
         CONFIG = CONFIG or next((c for c in config_files if c.endswith('.xml')), None)
 
@@ -133,7 +166,7 @@ def forward(model: str, config: str, img: np.ndarray) -> Sequence[Any]:
     # Load the model
     net = cv.dnn.readNet(model, config)
 
-    net.setInput(cv.dnn.blobFromImage(img, scalefactor=(1.0 / 255), size=(width, height), swapRB=True, crop=False))
+    net.setInput(cv.dnn.blobFromImage(img, scalefactor=SCALE_FACTOR, size=(width, height), swapRB=True, crop=False))
 
     if GPU_SUPPORT:
         # Set preferable backend and target for GPU support
@@ -169,7 +202,7 @@ def detect(model: str, config: str, img: np.ndarray) -> tuple[np.ndarray]:
     # Create the detection model
     detection_model = cv.dnn_DetectionModel(net)
     detection_model.setInputSize(width, height)
-    detection_model.setInputScale(1.0 / 255)
+    detection_model.setInputScale(SCALE_FACTOR)
     detection_model.setInputSwapRB(True)
 
     # Perform object detection
@@ -218,7 +251,7 @@ def infer(data: bytes, model_path: str, config_path: str, names_path: str = None
     :type kwargs: dict, optional
     Keyword Arguments:
         * forward (bool): Optional flag indicating whether to perform a forward pass and return the computation time and response.
-    :return: A dictionary containing the latency and labeled objects.
+    :return: A dictionary containing inference statistics and labeled objects.
     :rtype: dict
     :warns: FileNotFoundError: If the `names_path` file is not found.
 
@@ -231,32 +264,37 @@ def infer(data: bytes, model_path: str, config_path: str, names_path: str = None
     >>> config = 'config.cfg'
     >>> classes = 'class_names.txt'
     >>> result = infer(img_data, model, config, classes)
-    {'latency': 0.5623, 'output': [{'id': 'person', 'confidence': 0.85}, {'id': 'car', 'confidence': 0.92}]}
+    {'detection_latency': 0.5623, 'start_time': 1632833372.123456, 'end_time': 1632833372.987654, 'results': [{'id': 'person', 'confidence': 0.85}, {'id': 'car', 'confidence': 0.92}]}
     >>> result = infer(img_data, model, config, forward=True)
-    {'latency': 0.3412, 'output': <forward_result>}
+    {'detection_latency': 0.3412, 'start_time': 1632833372.123456, 'end_time': 1632833372.987654, 'results': <forward_result>}
+
 
     """
     img = cv.cvtColor(np.array(Image.open(io.BytesIO(data))), cv.COLOR_BGR2RGB)
 
     if kwargs.get('forward', False):
-        compute_time, resp = timeit.timeit(lambda: forward(model_path, config_path, img), number=1)
-        output = tuple([ctx.tolist() for ctx in resp])
-        return dict(latency=compute_time, output=output)
+        t0 = time.time()
+        l, resp = timeit.timeit(lambda: forward(model_path, config_path, img), number=1)
+        t1 = time.time()
+        results = tuple([ctx.tolist() for ctx in resp])
+        return dict(latency=l, start_time=t0, end_time=t1, results=results)
 
-    compute_time, resp = timeit.timeit(lambda: detect(model_path, config_path, img), number=1)
-    labeled = label(resp)
+    t0 = time.time()
+    l, resp = timeit.timeit(lambda: detect(model_path, config_path, img), number=1)
+    t1 = time.time()
+    results = label(resp)
 
     try:
         if names_path:
             with open(names_path, 'r') as fp:
                 names = fp.read().rstrip("\n").split("\n")
-                for lab in labeled:
+                for lab in results:
                     lab.update(dict(id=names[lab.get("id")]))
     except FileNotFoundError as e:
         logger.warning(e)
         pass
 
-    return dict(latency=compute_time, output=labeled)
+    return dict(latency=l, start_time=t0, end_time=t1, results=results)
 
 
 def draw(img: np.ndarray, labeled_data: list[dict]) -> np.ndarray:
@@ -301,24 +339,55 @@ def invocations() -> flask.Response:
 
     :return: Flask Response object with a JSON response containing the inference results.
     """
-    resp = dict(
+    t0 = time.time()
+
+    flask_response = dict(
         response=json.dumps(dict()),
         status=None,
         mimetype='application/json'
     )
+
     try:
         data = flask.request.data
-        res = infer(data, MODEL, CONFIG, CLASSES, forward=FORWARD)
-        resp.update(
-            response=json.dumps(res),
+
+        resp = infer(data, MODEL, CONFIG, CLASSES, forward=FORWARD_PASS)
+
+        detection_start_time = resp.get('start_time')
+        detection_end_time = resp.get('end_time')
+        detection_latency = resp.get('latency')
+
+        if SILENT_RUN:
+            detection_results = []
+        else:
+            detection_results = resp.get('results')
+
+        t1 = time.time()
+
+        flask_response.update(
+            response=json.dumps(
+                dict(
+                    Model=os.path.basename(MODEL),
+                    Config=os.path.basename(CONFIG),
+                    VersionID=VERSION,
+                    ForwardPass=FORWARD_PASS,
+                    GPUSupport=GPU_SUPPORT,
+                    SilentRun=SILENT_RUN,
+                    StartTime=t0,
+                    EndTime=t1,
+                    DetectionStartTime=detection_start_time,
+                    DetectionEndTime=detection_end_time,
+                    DetectionLatency=detection_latency,
+                    Results=detection_results,
+                )
+            ),
             status=200,
             mimetype='application/json'
         )
     except Exception as ex:
         logger.error(ex, exc_info=True)
-        resp.update(
+        flask_response.update(
             response=None,
             status=500,
         )
     finally:
-        return flask.Response(**resp)
+        return flask.Response(**flask_response)

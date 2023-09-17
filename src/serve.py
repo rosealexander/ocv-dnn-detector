@@ -22,18 +22,17 @@
 #
 # We set the following parameters:
 #
-# Parameter                Environment Variable              Default Value
-# ---------                --------------------              -------------
-# number of workers        MODEL_SERVER_WORKERS              the number of CPU cores
-# timeout                  MODEL_SERVER_TIMEOUT              60 seconds
-# log level                LOG_LEVEL                         WARNING
-# debug mode               DEBUG                             None
+# Parameter                         Environment Variable              Default Value
+# ---------                         --------------------              -------------
+# number of workers                 MODEL_SERVER_WORKERS              the number of CPU cores
+# timeout                           MODEL_SERVER_TIMEOUT              60 seconds
+# log level                         LOG_LEVEL                         WARNING
+# enable enhanced logging           DEBUG                             None
 
 from __future__ import print_function
 
 import multiprocessing
 import os
-import time
 import signal
 import subprocess
 import sys
@@ -41,11 +40,18 @@ import logging
 import psutil
 
 
-# Configure logging
+# Read environment variables
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
 DEBUG = os.getenv('DEBUG', False)
 
+# Configure logging
 logger = logging.getLogger(__name__)
+
+log_handler = logging.StreamHandler()
+log_timestamp_format = "%Y-%m-%d %H:%M:%S %z"
+log_formatter = logging.Formatter(fmt='[%(asctime)s] [%(process)d] [%(levelname)s] %(message)s', datefmt=log_timestamp_format)
+log_formatter = log_handler.setFormatter(log_formatter)
+logger.addHandler(log_handler)
 
 if LOG_LEVEL == 'DEBUG' or DEBUG:
     LOG_LEVEL = 'DEBUG'
@@ -80,20 +86,16 @@ def sigterm_handler(nginx_pid, gunicorn_pid):
 
 def log_server_information():
     memory_info = psutil.virtual_memory()
-    swap_memory_info = psutil.swap_memory()
-    cpu_percent = psutil.cpu_percent(interval=1)
-    load_average = os.getloadavg()
-
-    t = time.time()
-
-    logger.debug(f"{t}: Memory Usage: {memory_info.used / (1024 ** 3):.2f} GB used / {memory_info.total / (1024 ** 3):.2f} GB total ({memory_info.percent:.2f}% used)")
-    logger.debug(f"{t}: Swap Memory Usage: {swap_memory_info.used / (1024 ** 3):.2f} GB used / {swap_memory_info.total / (1024 ** 3):.2f} GB total")
-    logger.debug(f"{t}: CPU Usage: {cpu_percent}%")
-    logger.debug(f"{t}: Load Average: {load_average}")
+    cpu_percent = psutil.cpu_percent()
+    logger.debug("Memory Usage: {:.2f} GB used / {:.2f} GB total ({:.2f}% used)".format(memory_info.used / (1024 ** 3), memory_info.total / (1024 ** 3), memory_info.percent))
+    logger.debug("CPU Usage: {:.2f}%".format(cpu_percent))
 
 
 def start_server():
-    logger.info('Starting the inference server with {} workers.'.format(model_server_workers))
+    if DEBUG:
+        logger.info('Starting the server with debugging and {} workers.'.format(model_server_workers))
+    else:
+        logger.info('Starting the server with {} workers.'.format(model_server_workers))
 
     # link the log streams to stdout/err, so they will be logged to the container logs
     subprocess.check_call(['ln', '-sf', '/dev/stdout', '/var/log/nginx/access.log'])

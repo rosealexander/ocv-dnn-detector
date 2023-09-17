@@ -62,10 +62,14 @@ Example Response:
 
 Used for performing object detection on an input image. It expects a POST request with image data in the request body. Its response contains the inference results, including the latency, in seconds, and labeled objects.
 
-Example Request:
+Example Requests:
 
 ```shell
-curl -X POST -H "Content-Type: image/jpeg" --data-binary "@image.jpg" <application_url>/invocations
+curl -X POST -H 'Content-Type: image/jpeg' --data-binary '@image.jpg' '<application_url>/invocations'
+```
+
+```shell
+wget -qO - --method POST --header 'Content-Type: image/jpeg' --body-file='/image.jpg' '<application_url>/invocations'
 ```
 
 Example Response
@@ -122,14 +126,16 @@ Example Response
 
 The following models have been tested to work:
 
-| Model                                                        | Weights File                                                                                                                                       | Config File                                                                                                                                                          |
-|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Faster-RCNN Inception v2](docs/Faster-RCNN-Inception-v2.md) | [Download](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)                                 | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/faster_rcnn_inception_v2_coco_2018_01_28.pbtxt)                                               |
-| [Mask-RCNN Inception v2](docs/Mask-RCNN-Inception-v2.md)     | [Download](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)                                   | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt)                                                 |
-| [MobileNet-SSD v3 Large](docs/MobileNet-SSD-v3-Large.md)     | [Download](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v3_large_coco_2020_01_14.tar.gz)                                   | [Download](https://gist.github.com/dkurt/54a8e8b51beb3bd3f770b79e56927bd7/raw/2a20064a9d33b893dd95d2567da126d0ecd03e85/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt) |
-| [YOLOv4](docs/yolov4.md)                                     | [Download](https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov4.weights)                                                            | [Download](https://github.com/AlexeyAB/darknet/raw/master/cfg/yolov4.cfg)                                                                                            |
+| Model                                                  | Weights                                                                                                             | Config                                                                                                                 |
+|--------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| [Faster-RCNN Inception](docs/Faster-RCNN-Inception.md) | [Download](http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz)  | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/faster_rcnn_inception_v2_coco_2018_01_28.pbtxt) |
+| [Faster-RCNN Inception](docs/Faster-RCNN-Resnet.md)    | [Download](http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz)      | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/faster_rcnn_resnet50_coco_2018_01_28.pbtxt)     |
+| [Mask-RCNN Inception](docs/Mask-RCNN-Inception.md)     | [Download](http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz)    | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt)   |
+| [SSD-Inception](docs/SSD-Inception.md)                 | [Download](http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2017_11_17.tar.gz)          | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/ssd_inception_v2_coco_2017_11_17.pbtxt)         |
+| [SSD-MobileNet](docs/SSD-MobileNet.md)                 | [Download](http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2017_11_17.tar.gz)          | [Download](https://github.com/opencv/opencv_extra/raw/4.x/testdata/dnn/ssd_inception_v2_coco_2017_11_17.pbtxt)         |
+| [YOLOv4](docs/yolov4.md)                               | [Download](https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov4.weights)                             | [Download](https://github.com/AlexeyAB/darknet/raw/master/cfg/yolov4.cfg)                                              |
+| [YOLOv4-tiny](docs/yolov4-tiny.md)                     | [Download](https://github.com/AlexeyAB/darknet/releases/download/yolov4/yolov4-tiny.weights)                        | [Download](https://github.com/AlexeyAB/darknet/raw/master/cfg/yolov4-tiny.cfg)                                         |
 
-* Please note that these are provided as examples and additional models may be integrated.
 
 ## License
 

@@ -103,14 +103,14 @@ CLASSES = os.getenv('CLASSES', None)
 FORWARD_PASS = os.getenv('FORWARD_PASS', '').lower() == 'true'
 GPU_SUPPORT = os.getenv('GPU_SUPPORT', '').lower() == 'true'
 SILENT_RUN = os.getenv('SILENT_RUN', '').lower() == 'true'
-
 CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', 0.5))
 NMS_THRESHOLD = float(os.getenv('NMS_THRESHOLD', 0.5))
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
 SCALE_FACTOR = os.getenv('SCALE_FACTOR', 1.0)
 DEBUG = os.getenv('DEBUG', False)
 
 # Configure logging
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING').upper()
+
 logger = logging.getLogger(__name__)
 
 log_handler = logging.StreamHandler()
@@ -143,15 +143,12 @@ if MODEL is None or CONFIG is None:
     5. Check the file extension of the MODEL and find the corresponding configuration file.
     6. Check if CONFIG is None, unless MODEL ends with .t7, .net, or .onnx.
     """
-
     model_pattern = r"\.(caffemodel|pb|t7|net|weights|bin|onnx)$"
     config_pattern = r"\.(prototxt|pbtxt|cfg|xml)$"
     files = [file for file in glob.glob('**/*', recursive=True) if not file.startswith(('.', 'bin/', 'docs/', 'src/', 'tests/', 'venv/'))]
     config_files = [file for file in files if re.search(config_pattern, file)]
     model_files = [file for file in files if re.search(model_pattern, file)]
-
     MODEL = MODEL or next((c for c in model_files), None)
-
     if MODEL is None:
         raise ValueError("MODEL cannot be None")
     elif MODEL.endswith('.caffemodel'):
@@ -165,13 +162,24 @@ if MODEL is None or CONFIG is None:
             SCALE_FACTOR = os.getenv('SCALE_FACTOR', (1.0 / 255))
     elif MODEL.endswith('.bin'):
         CONFIG = CONFIG or next((c for c in config_files if c.endswith('.xml')), None)
-
     if CONFIG is None and not (
             MODEL.endswith('.t7') or MODEL.endswith('.net') or MODEL.endswith('.onnx') or MODEL.endswith('.pb')):
         raise ValueError("CONFIG cannot be None")
 
 
 def forward(model: str, config: str, img: np.ndarray) -> Sequence[Any]:
+    """
+    Forward pass an image through a model.
+
+    :param model: Path to model file.
+    :type model: str
+    :param config: Path to configuration file.
+    :type config: str
+    :param img: Input image for forward pass.
+    :type img: numpy.ndarray
+    :return: Output obtained from the forward pass.
+    :rtype: Sequence[Any]
+    """
     height, width, _ = img.shape
 
     # Load the model
@@ -347,6 +355,7 @@ def invocations() -> flask.Response:
     :return: Flask Response object with a JSON response containing the inference results.
     """
     t0 = time.time()
+    st = time.perf_counter_ns()
 
     flask_response = dict(
         response=json.dumps(dict()),
@@ -368,6 +377,7 @@ def invocations() -> flask.Response:
         else:
             detection_results = resp.get('results')
 
+        latency = (time.perf_counter_ns() - st) / 10 ** 9
         t1 = time.time()
 
         flask_response.update(
@@ -381,9 +391,10 @@ def invocations() -> flask.Response:
                     SilentRun=SILENT_RUN,
                     StartTime=t0,
                     EndTime=t1,
+                    Latency=latency,
                     DetectionStartTime=detection_start_time,
                     DetectionEndTime=detection_end_time,
-                    DetectionLatency=detection_latency,
+                    DetectionLatency=round(detection_latency, 9),
                     Results=detection_results,
                 )
             ),
@@ -397,4 +408,5 @@ def invocations() -> flask.Response:
             status=500,
         )
     finally:
+        print(flask_response['response'])
         return flask.Response(**flask_response)

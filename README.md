@@ -115,11 +115,12 @@ Example Response
 - **ForwardPass** If response output format is [cv.dnn.Net.forward](https://docs.opencv.org/3.4/db/d30/classcv_1_1dnn_1_1Net.html#a00e707a86b2da4f980f9342b1fc2cc92).
 - **GPUSupport** If GPU support is enabled.
 - **SilentRun** If detector ran without returning object detection results.
-- **StartTime** The response start time.
-- **EndTime** The response end time
-- **DetectionStartTime** The object detection start time.
-- **DetectionEndTime** The object detection end time.
-- **DetectionLatency** The object detection latency.
+- **StartTime** The response start time POSIX timestamp.
+- **EndTime** The response end time POSIX timestamp
+- **Latency** The response latency in seconds.
+- **DetectionStartTime** The object detection start time POSIX timestamp.
+- **DetectionEndTime** The object detection end time POSIX timestamp.
+- **DetectionLatency** The object detection latency in seconds.
 - **Results** The object detection results.
 
 ## Model Zoo
